@@ -1,0 +1,7 @@
+{
+  "name": "ScholarTransit AI",
+  "description": "A next-gen student performance analysis and smart bus tracking dashboard. Features academic risk assessment using Gemini Thinking mode, real-time bus crowd alerts, and an intelligent campus assistant.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
