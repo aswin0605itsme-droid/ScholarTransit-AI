@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../services/dbService';
 import { Bus } from '../types';
@@ -14,7 +15,9 @@ import {
   Filter, 
   ArrowUpDown,
   Clock,
-  Loader2
+  Loader2,
+  Map as MapIcon,
+  Maximize2
 } from 'lucide-react';
 import { findBusStops } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -32,6 +35,8 @@ const BusPanel: React.FC = () => {
   const [locQuery, setLocQuery] = useState('');
   const [locResult, setLocResult] = useState<string | null>(null);
   const [loadingLoc, setLoadingLoc] = useState(false);
+
+  const [selectedBusForMap, setSelectedBusForMap] = useState<Bus | null>(null);
 
   const loadBuses = async () => {
     setIsDataLoading(true);
@@ -100,7 +105,62 @@ const BusPanel: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in relative">
+      {/* Route Map Modal */}
+      {selectedBusForMap && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setSelectedBusForMap(null)} />
+          <div className="relative w-full max-w-5xl h-[80vh] bg-[#0f172a] border border-white/20 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-400">
+                  <BusIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-white">{selectedBusForMap.route}</h3>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Tracking Live Position • ID: {selectedBusForMap.id}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedBusForMap(null)}
+                className="p-3 hover:bg-white/10 rounded-2xl transition-colors text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex-1 relative bg-black">
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://www.google.com/maps/embed/v1/search?key=${process.env.API_KEY}&q=${encodeURIComponent(selectedBusForMap.route + " " + selectedBusForMap.nextStop)}&zoom=15`}
+                allowFullScreen
+              ></iframe>
+              <div className="absolute bottom-6 left-6 right-6">
+                <GlassCard className="p-4 border-white/20 bg-black/60 backdrop-blur-xl flex items-center justify-between" hoverEffect={false}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center animate-pulse">
+                      <MapPin className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-indigo-300 font-black uppercase tracking-tighter">Current Target Stop</p>
+                      <p className="text-white font-bold">{selectedBusForMap.nextStop}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-tighter">Status</p>
+                    <p className={`font-black ${selectedBusForMap.status === 'On Time' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {selectedBusForMap.status.toUpperCase()}
+                    </p>
+                  </div>
+                </GlassCard>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div>
           <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Transit Fleet</h2>
@@ -167,7 +227,12 @@ const BusPanel: React.FC = () => {
           processedBuses.map((bus) => {
             const occupancyPct = (bus.currentOccupancy / bus.capacity) * 100;
             return (
-              <GlassCard key={bus.id} className="relative overflow-hidden group border-white/5 p-8">
+              <GlassCard key={bus.id} className="relative overflow-hidden group border-white/5 p-8 flex flex-col h-full">
+                {/* Visual Map Texture Overlay */}
+                <div className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none">
+                   <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '12px 12px' }}></div>
+                </div>
+
                 <div className="absolute top-6 right-6">
                    <div className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                       bus.crowdLevel === 'Heavy' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
@@ -188,7 +253,7 @@ const BusPanel: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-6 flex-1">
                   <div className="flex justify-between items-end text-xs uppercase tracking-widest font-black">
                     <span className="text-gray-500 flex items-center gap-2">
                       <Users className="w-4 h-4 text-indigo-500" /> Occupancy
@@ -205,7 +270,7 @@ const BusPanel: React.FC = () => {
                     ></div>
                   </div>
 
-                  <div className="flex justify-between items-center pt-6 border-t border-white/5">
+                  <div className="flex justify-between items-center py-4 border-y border-white/5">
                     <div className="flex items-center gap-3 text-xs font-bold text-gray-400">
                       <MapPin className="w-4 h-4 text-indigo-500" />
                       <span className="uppercase tracking-tight">Next Stop:</span>
@@ -223,6 +288,19 @@ const BusPanel: React.FC = () => {
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button 
+                    onClick={() => setSelectedBusForMap(bus)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px] transition-all shadow-lg shadow-indigo-600/20 active:scale-95 group"
+                  >
+                    <MapIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    Track Route
+                  </button>
+                  <button className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-all">
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
                 </div>
               </GlassCard>
             );
