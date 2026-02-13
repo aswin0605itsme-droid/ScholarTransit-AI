@@ -37,15 +37,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white flex overflow-hidden selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-app-gradient text-white flex overflow-hidden selection:bg-indigo-500/30">
+      {/* Dynamic Background elements */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-purple-600/10 blur-[150px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[700px] h-[700px] bg-indigo-600/10 blur-[150px] rounded-full" />
+      </div>
+
       <Sidebar currentView={currentView} onViewChange={setCurrentView} />
       
-      <main className="flex-1 ml-20 lg:ml-64 p-8 overflow-y-auto h-screen relative">
-        {/* Ambient Background Glows */}
-        <div className="fixed top-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-600/20 blur-[120px] rounded-full pointer-events-none -z-10" />
-        <div className="fixed bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none -z-10" />
-        
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 ml-20 lg:ml-64 p-8 overflow-y-auto h-screen relative scroll-smooth bg-transparent">
+        <div className="max-w-7xl mx-auto relative z-10">
           {renderView()}
         </div>
       </main>

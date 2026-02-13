@@ -1,9 +1,15 @@
+
 export interface AcademicDue {
   id: string;
   category: string;
   amount: number;
   dueDate: string;
   status: 'Paid' | 'Pending' | 'Overdue';
+}
+
+export interface PerformanceHistory {
+  term: string;
+  gpa: number;
 }
 
 export interface Student {
@@ -20,6 +26,7 @@ export interface Student {
   riskLevel: 'Low' | 'Medium' | 'High';
   riskScore?: number;
   dues: AcademicDue[];
+  performanceHistory: PerformanceHistory[];
 }
 
 export interface Bus {
